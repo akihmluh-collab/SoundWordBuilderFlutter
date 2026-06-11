@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "548183651248",
+    "project_id": "soundwordbuilder",
+    "storage_bucket": "soundwordbuilder.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548183651248:android:6484703e978d531dfc1c75",
+        "android_client_info": {
+          "package_name": "com.soundwordbuilder.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "548183651248-rglhd6l56q8j27mub109h13t82frh465.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcXTTio5dd_Y61XvlCDRCUs8gkfbU1x-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "548183651248-rglhd6l56q8j27mub109h13t82frh465.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548183651248:android:6317a8f72fad2b9dfc1c75",
+        "android_client_info": {
+          "package_name": "com.soundwordbuilder.soundwordbuilder_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "548183651248-rglhd6l56q8j27mub109h13t82frh465.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcXTTio5dd_Y61XvlCDRCUs8gkfbU1x-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "548183651248-rglhd6l56q8j27mub109h13t82frh465.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
