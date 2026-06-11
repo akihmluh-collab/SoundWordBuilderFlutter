@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
+import '../student/student_dashboard.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,8 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  String _role = 'student';
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   Future<void> _register() async {
     if (_emailController.text.isEmpty || 
@@ -34,12 +35,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _emailController.text, 
       _passwordController.text, 
       _nameController.text,
-      _role,
+      'student', // Force student role only
     );
     
     setState(() => _isLoading = false);
     
-    if (!success) {
+    if (success) {
+      // Auto-navigate to Student Dashboard
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const StudentDashboard()),
+        (route) => false,
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration failed. Try again.')),
       );
@@ -78,22 +86,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Password',
-                prefixIcon: Icon(Icons.lock),
+                prefixIcon: const Icon(Icons.lock),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
+                ),
               ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'student', label: Text('Student')),
-                ButtonSegment(value: 'teacher', label: Text('Teacher')),
-              ],
-              selected: {_role},
-              onSelectionChanged: (Set<String> selection) {
-                setState(() => _role = selection.first);
-              },
+              obscureText: _obscurePassword,
             ),
             const SizedBox(height: 24),
             _isLoading

@@ -1,9 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/firestore_service.dart';
 import '../../models/user_model.dart';
 
 class ManageStudents extends StatelessWidget {
   const ManageStudents({super.key});
+
+  Future<void> _revokeAccess(BuildContext context, String userId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Revoke Access'),
+        content: const Text('Are you sure you want to revoke this student\'s subscription access?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Revoke', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+    
+    if (confirm == true) {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'subscriptionExpiry': null,
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Access revoked')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteStudent(BuildContext context, String userId, String name) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Student'),
+        content: Text('Are you sure you want to delete $name? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+    
+    if (confirm == true) {
+      await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Student deleted')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +102,26 @@ class ManageStudents extends StatelessWidget {
                       ),
                     ],
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add_card, color: Colors.blue),
-                    onPressed: () => _extendSubscription(context, firestore, student),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (hasSubscription)
+                        IconButton(
+                          icon: const Icon(Icons.block, color: Colors.orange),
+                          onPressed: () => _revokeAccess(context, student.uid),
+                          tooltip: 'Revoke Access',
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.add_card, color: Colors.blue),
+                        onPressed: () => _extendSubscription(context, firestore, student),
+                        tooltip: 'Extend Subscription',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _deleteStudent(context, student.uid, student.name),
+                        tooltip: 'Delete Student',
+                      ),
+                    ],
                   ),
                 ),
               );

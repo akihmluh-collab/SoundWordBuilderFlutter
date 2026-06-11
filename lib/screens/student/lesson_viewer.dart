@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../models/lesson_model.dart';
 import '../../utils/constants.dart';
 
@@ -12,23 +12,16 @@ class LessonViewer extends StatefulWidget {
 }
 
 class _LessonViewerState extends State<LessonViewer> {
-  late YoutubePlayerController? _youtubeController;
+  late final WebViewController _webViewController;
 
   @override
   void initState() {
     super.initState();
     if (widget.lesson.type == 'video' && widget.lesson.youtubeId != null) {
-      _youtubeController = YoutubePlayerController(
-        initialVideoId: widget.lesson.youtubeId!,
-        flags: const YoutubePlayerFlags(autoPlay: false),
-      );
+      _webViewController = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..loadRequest(Uri.parse('https://www.youtube.com/watch?v=${widget.lesson.youtubeId}'));
     }
-  }
-
-  @override
-  void dispose() {
-    _youtubeController?.dispose();
-    super.dispose();
   }
 
   @override
@@ -40,8 +33,11 @@ class _LessonViewerState extends State<LessonViewer> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.lesson.type == 'video' && _youtubeController != null)
-              YoutubePlayer(controller: _youtubeController!),
+            if (widget.lesson.type == 'video' && widget.lesson.youtubeId != null)
+              SizedBox(
+                height: 250,
+                child: WebViewWidget(controller: _webViewController),
+              ),
             if (widget.lesson.type == 'video' && widget.lesson.youtubeId == null)
               const Card(
                 color: Colors.red,

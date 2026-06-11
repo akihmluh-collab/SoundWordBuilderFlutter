@@ -18,13 +18,22 @@ class _ManageLessonsState extends State<ManageLessons> {
   LevelModel? _selectedLevel;
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
-  final _orderController = TextEditingController();
-  final _youtubeIdController = TextEditingController();
+  final _youtubeUrlController = TextEditingController();
   final _textContentController = TextEditingController();
   String _lessonType = 'video';
   final _formKey = GlobalKey<FormState>();
+  String? _editingLessonId;
 
-  Future<void> _addLesson() async {
+  String _extractYoutubeId(String url) {
+    if (url.contains('youtu.be/')) {
+      return url.split('youtu.be/').last.split('?').first;
+    } else if (url.contains('watch?v=')) {
+      return url.split('watch?v=').last.split('&').first;
+    }
+    return url; // assume it's already an ID
+  }
+
+  Future<void> _saveLesson() async {
     if (!_formKey.currentState!.validate() || _selectedLevel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a level and fill all fields')),
@@ -35,14 +44,14 @@ class _ManageLessonsState extends State<ManageLessons> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     
     final lesson = LessonModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _editingLessonId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       levelId: _selectedLevel!.id,
       title: _titleController.text,
       description: _descController.text,
       type: _lessonType,
-      youtubeId: _lessonType == 'video' ? _youtubeIdController.text : null,
+      youtubeId: _lessonType == 'video' ? _extractYoutubeId(_youtubeUrlController.text) : null,
       textContent: _lessonType == 'text' ? _textContentController.text : null,
-      order: int.parse(_orderController.text),
+      order: 0, // order removed
       createdAt: DateTime.now(),
       createdBy: auth.user!.uid,
     );
@@ -51,15 +60,36 @@ class _ManageLessonsState extends State<ManageLessons> {
     
     _titleController.clear();
     _descController.clear();
-    _orderController.clear();
-    _youtubeIdController.clear();
+    _youtubeUrlController.clear();
     _textContentController.clear();
+    setState(() => _editingLessonId = null);
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lesson added successfully')),
+        SnackBar(content: Text(_editingLessonId != null ? 'Lesson updated' : 'Lesson added successfully')),
       );
     }
+  }
+
+  void _editLesson(LessonModel lesson) {
+    _titleController.text = lesson.title;
+    _descController.text = lesson.description;
+    _lessonType = lesson.type;
+    if (lesson.type == 'video' && lesson.youtubeId != null) {
+      _youtubeUrlController.text = 'https://youtube.com/watch?v=${lesson.youtubeId}';
+    }
+    if (lesson.type == 'text' && lesson.textContent != null) {
+      _textContentController.text = lesson.textContent!;
+    }
+    setState(() => _editingLessonId = lesson.id);
+  }
+
+  void _cancelEdit() {
+    _titleController.clear();
+    _descController.clear();
+    _youtubeUrlController.clear();
+    _textContentController.clear();
+    setState(() => _editingLessonId = null);
   }
 
   @override
@@ -106,6 +136,7 @@ class _ManageLessonsState extends State<ManageLessons> {
                   onChanged: (value) {
                     setState(() {
                       _selectedLevel = value;
+                      _cancelEdit();
                     });
                   },
                 );
@@ -152,17 +183,26 @@ class _ManageLessonsState extends State<ManageLessons> {
                                       child: Text('${index + 1}'),
                                     ),
                                     title: Text(lesson.title),
-                                    subtitle: Text('${lesson.type} | Order: ${lesson.order}'),
-                                    trailing: IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () async {
-                                        await firestore.deleteLesson(lesson.id);
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Lesson deleted')),
-                                          );
-                                        }
-                                      },
+                                    subtitle: Text(lesson.type),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit, color: Colors.orange),
+                                          onPressed: () => _editLesson(lesson),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          onPressed: () async {
+                                            await firestore.deleteLesson(lesson.id);
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Lesson deleted')),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );
@@ -187,8 +227,8 @@ class _ManageLessonsState extends State<ManageLessons> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Add New Lesson', 
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(_editingLessonId != null ? 'Edit Lesson' : 'Add New Lesson', 
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _titleController,
@@ -199,13 +239,6 @@ class _ManageLessonsState extends State<ManageLessons> {
                       TextFormField(
                         controller: _descController,
                         decoration: const InputDecoration(labelText: 'Description'),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _orderController,
-                        decoration: const InputDecoration(labelText: 'Order Number'),
-                        keyboardType: TextInputType.number,
-                        validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
                       ),
                       const SizedBox(height: 8),
                       const Text('Lesson Type', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -226,10 +259,10 @@ class _ManageLessonsState extends State<ManageLessons> {
                       const SizedBox(height: 8),
                       if (_lessonType == 'video')
                         TextFormField(
-                          controller: _youtubeIdController,
+                          controller: _youtubeUrlController,
                           decoration: const InputDecoration(
-                            labelText: 'YouTube Video ID',
-                            hintText: 'e.g., dQw4w9WgXcQ',
+                            labelText: 'YouTube URL',
+                            hintText: 'https://youtube.com/watch?v=...',
                           ),
                         ),
                       if (_lessonType == 'text')
@@ -247,12 +280,24 @@ class _ManageLessonsState extends State<ManageLessons> {
                           ),
                         ),
                       const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _addLesson,
-                          child: const Text('Add Lesson'),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _saveLesson,
+                              child: Text(_editingLessonId != null ? 'Update Lesson' : 'Add Lesson'),
+                            ),
+                          ),
+                          if (_editingLessonId != null)
+                            const SizedBox(width: 12),
+                          if (_editingLessonId != null)
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: _cancelEdit,
+                                child: const Text('Cancel'),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
