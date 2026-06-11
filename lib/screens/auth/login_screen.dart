@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
 import 'register_screen.dart';
@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text);
+      await firebase_auth.FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password reset email sent. Check your inbox.')),
