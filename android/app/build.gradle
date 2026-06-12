@@ -8,6 +8,10 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 android {
     namespace = "com.soundwordbuilder.soundwordbuilder_flutter"
     compileSdk = flutter.compileSdkVersion
