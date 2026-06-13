@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../models/lesson_model.dart';
 import '../../utils/constants.dart';
 
@@ -12,16 +12,36 @@ class LessonViewer extends StatefulWidget {
 }
 
 class _LessonViewerState extends State<LessonViewer> {
-  late final WebViewController _webViewController;
+  late YoutubePlayerController _controller;
+  bool _isPlayerReady = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.lesson.type == 'video' && widget.lesson.youtubeId != null) {
-      _webViewController = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..loadRequest(Uri.parse('https://www.youtube.com/watch?v=${widget.lesson.youtubeId}'));
+      _controller = YoutubePlayerController(
+        initialVideoId: widget.lesson.youtubeId!,
+        flags: const YoutubePlayerFlags(
+          autoPlay: false,
+          mute: false,
+          disableDragSeek: false,
+          loop: false,
+          isLive: false,
+          forceHD: false,
+          enableCaption: true,
+        ),
+      )..addListener(() {
+        if (mounted && !_isPlayerReady) {
+          setState(() => _isPlayerReady = true);
+        }
+      });
     }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -34,9 +54,24 @@ class _LessonViewerState extends State<LessonViewer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.lesson.type == 'video' && widget.lesson.youtubeId != null)
-              SizedBox(
-                height: 250,
-                child: WebViewWidget(controller: _webViewController),
+              YoutubePlayer(
+                controller: _controller,
+                showVideoProgressIndicator: true,
+                progressIndicatorColor: AppColors.primary,
+                topActions: [
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.lesson.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
               ),
             if (widget.lesson.type == 'video' && widget.lesson.youtubeId == null)
               const Card(
