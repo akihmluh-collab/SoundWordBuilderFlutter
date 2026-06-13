@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/payment_service.dart';
+import '../../services/mesomb_service.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/constants.dart';
 
@@ -28,31 +28,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() => _isProcessing = true);
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    final paymentService = PaymentService();
     final firestore = FirestoreService();
+    final mesomb = MeSombService();
 
-    bool success = await paymentService.processPayment(
+    final result = await mesomb.initiatePayment(
       amount: 10000,
       phoneNumber: _phoneController.text,
       provider: _provider,
       userId: auth.user!.uid,
     );
 
-    if (success) {
+    if (result['status'] == 'SUCCESS') {
       final expiryDate = DateTime.now().add(const Duration(days: 30));
       await firestore.updateSubscription(auth.user!.uid, expiryDate);
       await auth.refreshUser();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment successful! Subscription activated.')),
+          const SnackBar(content: Text('Payment successful! Subscription activated for 30 days.')),
         );
         Navigator.pop(context);
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment failed. Please try again.')),
+          SnackBar(content: Text('Payment failed: ${result['message'] ?? 'Try again'}')),
         );
       }
     }
