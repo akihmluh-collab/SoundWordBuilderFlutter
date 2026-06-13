@@ -28,6 +28,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        manifestPlaceholders = [
+            YOUTUBE_API_KEY: "AIzaSyAWt52sBSlIjuTkkV5Ulk0DdNafuxpFKWU"
+        ]
     }
 
     buildTypes {
