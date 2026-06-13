@@ -37,6 +37,52 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     });
   }
 
+  void _showAnnouncementDialog(BuildContext context) {
+    final messageController = TextEditingController();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Send Announcement'),
+        content: TextField(
+          controller: messageController,
+          decoration: const InputDecoration(
+            labelText: 'Message',
+            hintText: 'e.g., New version available. Please update your app.',
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final message = messageController.text.trim();
+              if (message.isEmpty) return;
+              
+              await FirebaseFirestore.instance.collection('announcements').add({
+                'message': message,
+                'createdAt': DateTime.now(),
+                'createdBy': auth.user?.uid,
+              });
+              
+              Navigator.pop(context);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Announcement sent to all students')),
+                );
+              }
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
@@ -114,6 +160,15 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               subtitle: 'View and manage student accounts',
               color: Colors.purple,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageStudents())),
+            ),
+            const SizedBox(height: 12),
+            _buildMenuItem(
+              context,
+              icon: Icons.announcement,
+              title: 'Send Announcement',
+              subtitle: 'Send messages to all students',
+              color: Colors.orange,
+              onTap: () => _showAnnouncementDialog(context),
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firestore_service.dart';
 import '../../models/user_model.dart';
 
@@ -45,7 +46,15 @@ class ManageStudents extends StatelessWidget {
     );
     
     if (confirm == true) {
+      // Delete from Firestore
       await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+      
+      // Disable account in Authentication (mark as inactive)
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'isActive': false,
+        'deletedAt': DateTime.now(),
+      }, SetOptions(merge: true));
+      
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Student deleted')),
