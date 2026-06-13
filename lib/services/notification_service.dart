@@ -34,8 +34,8 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
     );
-    const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    final iosDetails = DarwinNotificationDetails();
+    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
     
     _localNotifications.show(
       DateTime.now().millisecondsSinceEpoch.remainder(100000),

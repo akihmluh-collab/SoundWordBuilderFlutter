@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../support/contact_support.dart';
 import '../support/report_problem.dart';
 import '../legal/privacy_policy.dart';
@@ -51,7 +51,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
               setState(() => _isLoading = true);
               try {
-                final user = FirebaseAuth.instance.currentUser;
+                final user = firebase_auth.FirebaseAuth.instance.currentUser;
                 await user?.updatePassword(newPassword.text);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Password changed successfully')),
