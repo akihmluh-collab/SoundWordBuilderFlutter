@@ -100,9 +100,18 @@ Thank you.
                       'Send to: $_manualPhone',
                       style: const TextStyle(fontSize: 14, color: Colors.white70),
                     ),
+                    const Text(
+                      'Name: VILIEHSE IRINE ANGU',
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      '⚠️ Confirm the name before sending money!',
+                      style: TextStyle(fontSize: 12, color: Colors.orange),
+                    ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Step 2: Click "Pay Now via WhatsApp" below',
+                      'Step 2: Click "Confirm Payment via WhatsApp" below',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                     const Text(
@@ -160,7 +169,7 @@ Thank you.
                       minimumSize: const Size(double.infinity, 50),
                       backgroundColor: Colors.green,
                     ),
-                    child: const Text('Pay Now via WhatsApp'),
+                    child: const Text('Confirm Payment via WhatsApp'),
                   ),
           ],
         ),
