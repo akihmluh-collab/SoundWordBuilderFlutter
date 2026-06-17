@@ -52,13 +52,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() => _isLoading = true);
               try {
                 final user = firebase_auth.FirebaseAuth.instance.currentUser;
+                final email = user?.email;
+                
+                if (email == null) throw Exception('No user logged in');
+                
+                // Re-authenticate first
+                final credential = firebase_auth.EmailAuthProvider.credential(
+                  email: email,
+                  password: currentPassword.text,
+                );
+                await user?.reauthenticateWithCredential(credential);
+                
+                // Then change password
                 await user?.updatePassword(newPassword.text);
+                
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Password changed successfully')),
                 );
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Failed to change password')),
+                  SnackBar(content: Text('Failed: ${e.toString()}')),
                 );
               }
               setState(() => _isLoading = false);

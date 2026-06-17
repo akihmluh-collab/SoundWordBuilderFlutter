@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ContactSupport extends StatefulWidget {
   const ContactSupport({super.key});
@@ -27,6 +28,7 @@ class _ContactSupportState extends State<ContactSupport> {
 
     setState(() => _isLoading = true);
 
+    // Save to Firestore
     await FirebaseFirestore.instance.collection('support_tickets').add({
       'name': _nameController.text,
       'email': _emailController.text,
@@ -35,6 +37,23 @@ class _ContactSupportState extends State<ContactSupport> {
       'status': 'pending',
       'createdAt': DateTime.now(),
     });
+
+    // Send email via mailto
+    final email = 'support@soundwordbuilder.com';
+    final subject = 'Support: ${_subjectController.text}';
+    final body = '''
+Name: ${_nameController.text}
+Email: ${_emailController.text}
+Message: ${_messageController.text}
+''';
+    
+    final uri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+    );
+    
+    await launchUrl(uri);
 
     setState(() => _isLoading = false);
     

@@ -7,6 +7,26 @@ import '../../models/user_model.dart';
 class ManageStudents extends StatelessWidget {
   const ManageStudents({super.key});
 
+  Future<void> _grantAccess(BuildContext context, String userId) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    
+    if (date != null) {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'subscriptionExpiry': date,
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Access granted until ${date.toLocal().toString().split(' ')[0]}')),
+        );
+      }
+    }
+  }
+
   Future<void> _revokeAccess(BuildContext context, String userId) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -46,10 +66,8 @@ class ManageStudents extends StatelessWidget {
     );
     
     if (confirm == true) {
-      // Delete from Firestore
       await FirebaseFirestore.instance.collection('users').doc(userId).delete();
       
-      // Disable account in Authentication (mark as inactive)
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'isActive': false,
         'deletedAt': DateTime.now(),
@@ -114,6 +132,12 @@ class ManageStudents extends StatelessWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Grant Access button (always visible)
+                      IconButton(
+                        icon: const Icon(Icons.verified, color: Colors.green),
+                        onPressed: () => _grantAccess(context, student.uid),
+                        tooltip: 'Grant Access',
+                      ),
                       if (hasSubscription)
                         IconButton(
                           icon: const Icon(Icons.block, color: Colors.orange),

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/mesomb_service.dart';
 import '../../services/firestore_service.dart';
-import '../../utils/constants.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -14,8 +13,41 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final _phoneController = TextEditingController();
-  String _provider = 'mtn';
+  String _selectedService = 'MTN';
   bool _isProcessing = false;
+  
+  final String _manualPhone = '677927714';
+
+  Future<void> _sendWhatsApp() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    
+    final message = '''
+Hello SoundWordBuilder,
+
+I have made payment of 10,000 XAF via MTN MoMo.
+Phone number: ${_phoneController.text}
+
+Please find below my details:
+1. Registered email: ${auth.user?.email ?? 'N/A'}
+2. Payment screenshot attached separately
+
+Kindly activate my subscription.
+
+Thank you.
+''';
+    
+    final url = 'https://wa.me/237${
+      _manualPhone.replaceAll(RegExp(r'[^0-9]'), '')
+    }?text=${Uri.encodeComponent(message)}';
+    
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please install WhatsApp')),
+      );
+    }
+  }
 
   Future<void> _processPayment() async {
     if (_phoneController.text.isEmpty) {
@@ -27,36 +59,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     setState(() => _isProcessing = true);
 
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    final firestore = FirestoreService();
-    final mesomb = MeSombService();
-
-    final result = await mesomb.initiatePayment(
-      amount: 10000,
-      phoneNumber: _phoneController.text,
-      provider: _provider,
-      userId: auth.user!.uid,
-    );
-
-    if (result['status'] == 'SUCCESS') {
-      final expiryDate = DateTime.now().add(const Duration(days: 30));
-      await firestore.updateSubscription(auth.user!.uid, expiryDate);
-      await auth.refreshUser();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment successful! Subscription activated for 30 days.')),
-        );
-        Navigator.pop(context);
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment failed: ${result['message'] ?? 'Try again'}')),
-        );
-      }
-    }
-
+    // TEMPORARY: Manual payment flow
+    // This will be replaced with MeSomb integration later
+    
+    // For now, redirect to WhatsApp
+    await _sendWhatsApp();
+    
     setState(() => _isProcessing = false);
   }
 
@@ -68,20 +76,55 @@ class _PaymentScreenState extends State<PaymentScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             const Text('Amount: 10,000 XAF', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 32),
+            
+            const SizedBox(height: 16),
+            Card(
+              color: Colors.orange.withOpacity(0.1),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      '⚠️ Manual Payment',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Pay via MTN MoMo to: $_manualPhone',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Send payment details via WhatsApp after paying.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '🔜 Automatic payment coming soon.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
             SegmentedButton<String>(
               segments: const [
-                ButtonSegment(value: 'mtn', label: Text('MTN Money')),
-                ButtonSegment(value: 'orange', label: Text('Orange Money')),
+                ButtonSegment(value: 'MTN', label: Text('MTN Money')),
+                ButtonSegment(value: 'ORANGE', label: Text('Orange Money')),
               ],
-              selected: {_provider},
+              selected: {_selectedService},
               onSelectionChanged: (Set<String> selection) {
-                setState(() => _provider = selection.first);
+                setState(() => _selectedService = selection.first);
               },
             ),
+            
             const SizedBox(height: 24),
+            
             TextField(
               controller: _phoneController,
               decoration: const InputDecoration(
@@ -91,13 +134,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
               keyboardType: TextInputType.phone,
             ),
-            const SizedBox(height: 32),
+            
+            const SizedBox(height: 24),
+            
             _isProcessing
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: _processPayment,
-                    style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-                    child: const Text('Pay Now'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: Colors.green,
+                    ),
+                    child: const Text('Pay Now via WhatsApp'),
                   ),
           ],
         ),

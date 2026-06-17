@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReportProblem extends StatefulWidget {
   const ReportProblem({super.key});
@@ -31,12 +32,29 @@ class _ReportProblemState extends State<ReportProblem> {
 
     setState(() => _isLoading = true);
 
+    // Save to Firestore
     await FirebaseFirestore.instance.collection('problem_reports').add({
       'category': _category,
       'description': _descriptionController.text,
       'status': 'pending',
       'createdAt': DateTime.now(),
     });
+
+    // Send email
+    final email = 'support@soundwordbuilder.com';
+    final subject = 'Problem Report: $_category';
+    final body = '''
+Category: $_category
+Description: ${_descriptionController.text}
+''';
+    
+    final uri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+    );
+    
+    await launchUrl(uri);
 
     setState(() => _isLoading = false);
     _descriptionController.clear();

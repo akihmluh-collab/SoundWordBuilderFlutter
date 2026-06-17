@@ -45,13 +45,20 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Send Announcement'),
-        content: TextField(
-          controller: messageController,
-          decoration: const InputDecoration(
-            labelText: 'Message',
-            hintText: 'e.g., New version available. Please update your app.',
-          ),
-          maxLines: 3,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Max 5 announcements allowed'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: messageController,
+              decoration: const InputDecoration(
+                labelText: 'Message',
+                hintText: 'e.g., New version available. Please update your app.',
+              ),
+              maxLines: 3,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -62,6 +69,19 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             onPressed: () async {
               final message = messageController.text.trim();
               if (message.isEmpty) return;
+              
+              // Check current announcement count
+              final snapshot = await FirebaseFirestore.instance
+                  .collection('announcements')
+                  .get();
+              
+              if (snapshot.docs.length >= 5) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Maximum 5 announcements reached. Delete some first.')),
+                );
+                Navigator.pop(context);
+                return;
+              }
               
               await FirebaseFirestore.instance.collection('announcements').add({
                 'message': message,
@@ -77,6 +97,66 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               }
             },
             child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showManageAnnouncements(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Manage Announcements (Max 5)'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('announcements')
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final announcements = snapshot.data!.docs;
+              
+              if (announcements.isEmpty) {
+                return const Center(child: Text('No announcements yet.'));
+              }
+              
+              return ListView.builder(
+                itemCount: announcements.length,
+                itemBuilder: (context, index) {
+                  final doc = announcements[index];
+                  final message = doc['message'] as String;
+                  final createdAt = (doc['createdAt'] as Timestamp).toDate();
+                  
+                  return ListTile(
+                    title: Text(message, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(createdAt.toLocal().toString().split(' ')[0]),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        await doc.reference.delete();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Announcement deleted')),
+                          );
+                        }
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),
@@ -166,9 +246,18 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               context,
               icon: Icons.announcement,
               title: 'Send Announcement',
-              subtitle: 'Send messages to all students',
+              subtitle: 'Send messages to all students (max 5)',
               color: Colors.orange,
               onTap: () => _showAnnouncementDialog(context),
+            ),
+            const SizedBox(height: 12),
+            _buildMenuItem(
+              context,
+              icon: Icons.list_alt,
+              title: 'Manage Announcements',
+              subtitle: 'View and delete announcements',
+              color: Colors.teal,
+              onTap: () => _showManageAnnouncements(context),
             ),
           ],
         ),
