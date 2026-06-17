@@ -38,52 +38,53 @@ class StudentDashboard extends StatelessWidget {
               ),
             ],
           ),
-          // Announcements Banner
+          // Announcements Banner - Shows up to 5 announcements
           SliverToBoxAdapter(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('announcements')
                   .orderBy('createdAt', descending: true)
-                  .limit(1)
+                  .limit(5)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const SizedBox.shrink();
                 }
-                final announcement = snapshot.data!.docs.first;
-                final message = announcement['message'] as String;
-                final createdAt = (announcement['createdAt'] as Timestamp).toDate();
-                
-                return Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange.withOpacity(0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.announcement, color: Colors.orange),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              message,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Posted: ${createdAt.toLocal().toString().split(' ')[0]}',
-                              style: const TextStyle(fontSize: 10, color: Colors.white70),
-                            ),
-                          ],
-                        ),
+                return Column(
+                  children: snapshot.data!.docs.map((doc) {
+                    final message = doc['message'] as String;
+                    final createdAt = (doc['createdAt'] as Timestamp).toDate();
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.announcement, color: Colors.orange, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  message,
+                                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                                ),
+                                Text(
+                                  '📅 ${createdAt.toLocal().toString().split(' ')[0]}',
+                                  style: const TextStyle(fontSize: 10, color: Colors.white60),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 );
               },
             ),

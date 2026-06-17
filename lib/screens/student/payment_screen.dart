@@ -83,24 +83,39 @@ Thank you.
             Card(
               color: Colors.orange.withOpacity(0.1),
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      '⚠️ Manual Payment',
+                      '⚠️ Manual Payment Instructions',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Pay via MTN MoMo to: $_manualPhone',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 12),
                     const Text(
-                      'Send payment details via WhatsApp after paying.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      'Step 1: Pay 10,000 XAF via MTN MoMo',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Send to: $_manualPhone',
+                      style: const TextStyle(fontSize: 14, color: Colors.white70),
                     ),
                     const SizedBox(height: 8),
+                    const Text(
+                      'Step 2: Click "Pay Now via WhatsApp" below',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    const Text(
+                      'Step 3: Send your registered email and payment screenshot',
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Step 4: Teacher will activate your access within 24 hours',
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(),
                     const Text(
                       '🔜 Automatic payment coming soon.',
                       style: TextStyle(fontSize: 12, color: Colors.grey),
