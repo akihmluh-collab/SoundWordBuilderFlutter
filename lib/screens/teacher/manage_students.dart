@@ -67,15 +67,9 @@ class ManageStudents extends StatelessWidget {
     
     if (confirm == true) {
       await FirebaseFirestore.instance.collection('users').doc(userId).delete();
-      
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'isActive': false,
-        'deletedAt': DateTime.now(),
-      }, SetOptions(merge: true));
-      
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Student deleted')),
+          const SnackBar(content: Text('Student deleted from platform')),
         );
       }
     }

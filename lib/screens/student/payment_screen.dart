@@ -72,7 +72,7 @@ Thank you.
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Payment')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [

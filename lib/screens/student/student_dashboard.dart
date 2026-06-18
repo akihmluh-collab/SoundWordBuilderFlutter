@@ -21,6 +21,7 @@ class StudentDashboard extends StatelessWidget {
 
     return Scaffold(
       body: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverAppBar(
             title: Text('Hello, ${user?.name ?? 'Student'}'),
