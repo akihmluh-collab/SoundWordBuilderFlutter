@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="soundwordbuilder_new"
+        android:label="Sound and Word Building"
         android:name="android.app.Application"
         android:icon="@mipmap/ic_launcher">
         <activity
