@@ -28,6 +28,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if (_passwordController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -35,13 +42,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _emailController.text, 
       _passwordController.text, 
       _nameController.text,
-      'student', // Force student role only
+      'student',
     );
     
     setState(() => _isLoading = false);
     
     if (success) {
-      // Auto-navigate to Student Dashboard
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const StudentDashboard()),
@@ -87,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: 'Password (min 6 chars)',
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: IconButton(
                   icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
