@@ -14,6 +14,7 @@ class LessonViewer extends StatefulWidget {
 class _LessonViewerState extends State<LessonViewer> {
   late YoutubePlayerController _controller;
   bool _isPlayerReady = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -31,10 +32,15 @@ class _LessonViewerState extends State<LessonViewer> {
           enableCaption: true,
         ),
       )..addListener(() {
-        if (mounted && !_isPlayerReady) {
-          setState(() => _isPlayerReady = true);
-        }
-      });
+          if (mounted && !_isPlayerReady) {
+            if (_controller.value.isReady) {
+              setState(() {
+                _isPlayerReady = true;
+                _isLoading = false;
+              });
+            }
+          }
+        });
     }
   }
 
@@ -54,22 +60,43 @@ class _LessonViewerState extends State<LessonViewer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.lesson.type == 'video' && widget.lesson.youtubeId != null)
-              YoutubePlayer(
-                controller: _controller,
-                showVideoProgressIndicator: true,
-                progressIndicatorColor: AppColors.primary,
-                topActions: [
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      widget.lesson.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+              Column(
+                children: [
+                  Container(
+                    height: 250,
+                    color: Colors.black,
+                    child: Stack(
+                      children: [
+                        YoutubePlayer(
+                          controller: _controller,
+                          showVideoProgressIndicator: true,
+                          progressIndicatorColor: AppColors.primary,
+                          topActions: const [
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_isLoading)
+                          const Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.lesson.title,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
